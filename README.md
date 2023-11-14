@@ -16,8 +16,8 @@ TODO
 ### TODO
 
 * Vyhledávání spoje
-    * správný request
-    * select timetables
+    * správný request ✅
+    * select timetables ✅
     * pretty output
     * víc než první tři
 * doplnění celého jména (např. sm n --> smíchovské nádraží)
