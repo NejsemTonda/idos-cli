@@ -1,11 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 from connection import Connection, Transport
-from helpers import is_time
    
 
-f = "Pod Pekařkou"
-t = "Škvorec"
 
 def get_connections(f: str, t: str, means="vlakyautobusymhdvse"):
     """
@@ -31,7 +28,7 @@ def get_connections(f: str, t: str, means="vlakyautobusymhdvse"):
         names = [x.text for x in box.find_all("h3")]
         
         transports  = []
-        for x in [x for x in b.find_all('ul')][:len(names)]:
+        for x in [x for x in box.find_all('ul')][:len(names)]:
             data = []
             for y in x.find_all('li'):
                 # times and stations are p elements (time, station)
@@ -45,6 +42,6 @@ def get_connections(f: str, t: str, means="vlakyautobusymhdvse"):
         
             transports.append(t)
     
-        connection.append(Connection(transports))
+        connections.append(Connection(transports))
     
-    return connection
+    return connections
