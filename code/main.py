@@ -1,5 +1,5 @@
+#!/usr/bin/env python
 from api import get_connections
-from completion import complete
 from argparse import ArgumentParser 
 
 def find(args): 
@@ -10,19 +10,7 @@ def find(args):
     assert args.department is None or args.arrival is None, "arrival and department cannot be set at the same time"
     assert len(args.exclude) == 0 or len(args.only) == 0, "exclude and only cannot be set at the same time"
 
-    f_comp = complete(f)
-    t_comp = complete(t)
-
-    if len(f_comp) == 0:
-        raise ValueError(f"Did not find any stations with name matching {f}")
-    if len(t_comp) == 0:
-        raise ValueError(f"Did not find any stations with name matching {t}")
-
-
-    if len(f_comp) > 1 or len(t_comp) > 1:
-        raise NotImplementedError("Search for multiple stations was not implemented yet. f = {f}, t = {t}") 
-
-    return get_connections(f_comp[0], t_comp[0])
+    return get_connections(f, t)
      
 
 if __name__ == "__main__":
