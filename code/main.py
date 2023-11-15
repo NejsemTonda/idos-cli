@@ -1,16 +1,23 @@
 #!/usr/bin/env python
 from api import get_connections
 from argparse import ArgumentParser 
+from helpers import is_time
 
 def find(args): 
     args.from_to = " ".join(args.from_to)
     assert '-' in args.from_to, "from_to was not in correct format. See --help"
-    f,t = args.from_to.split('-') 
+    f,t = list(map(str.strip, args.from_to.split('-')))
     assert len(f) > 0 and len(t) > 0, "from_to was not in correct format. See --help"
-    assert args.department is None or args.arrival is None, "arrival and department cannot be set at the same time"
-    assert len(args.exclude) == 0 or len(args.only) == 0, "exclude and only cannot be set at the same time"
 
-    return get_connections(f, t)
+    assert args.department is None or args.arrival is None, "arrival and department cannot be set at the same time"
+    assert args.department is None or is_time(args.department), f"Time {args.department} was not in correct format"
+    assert args.arrival is None or is_time(args.arrival), f"Time {args.arrival} was not in correct format"
+
+    assert len(args.exclude) == 0 or len(args.only) == 0, "exclude and only cannot be set at the same time"
+    
+    time = args.arrival or args.department
+
+    return get_connections(f, t, time=time, arr=args.arrival is not None)
      
 
 if __name__ == "__main__":
