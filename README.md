@@ -1,6 +1,6 @@
 # IDOS command line interface
 
-V tomto repositáři se nacházi můj pokus o implementaci CLI pro IDOS online
+Vítejte v IDOS CLI, nástroji pro pohodlné a rychlé vyhledávání spojů pomocí webové aplikace iDOS. Tento prográmek vám umožňuje snadno a efektivně plánovat cesty a získávat informace o veřejné dopravě přímo z příkazové řádky.
 
 ## Dependencies
 
@@ -9,9 +9,28 @@ V tomto repositáři se nacházi můj pokus o implementaci CLI pro IDOS online
 
 ## Usage
 
-TODO
+Pro vyhledání spoje ze zastávku `FromStation` do zastávky `ToStation`:
 
-## Features
+`python main.py FromStation - ToStation`
+
+např. vyhledaní spoje z Kuchyňky na Malostranské náměstí:
+
+`python main.py Kuchyňka - Malostranské Náměstí` (argument musí obsahovat pomlčku)
+
+Místo celého názvu zastávky, lze zadat i jeho zkrácená forma:
+
+`python main.py kuch - malo nam`
+
+Já mám na main nastavený sim lin:
+`ln -s ~/path/to/main/main.py idos`
+`idos kuch - malo nam`
+
+K dispozici je několik flagů:
+*  `-d`, `--department` čas odjezdu (např. now, 16:37, 20min)
+*  `-a`, `--arrival`    čas příjezdu (např. now, 16:37, 20min)
+*  `-v`, `--via`        přes zastávky
+*  `-x`, `--exclude `   vyjma doprvaních prostředků (může být: bus, tram, metro, vlak)
+*  `-o`, `--only`       jenom tyto dopravní porstředky (může být: bus, tram, metro, vlak)
 
 ### TODO
 
@@ -25,4 +44,5 @@ TODO
     * -a and -d flagy pro konkrétní časy (hh:mm) ✅
 * přes
 * filtrování (jenom tramvaje, bez metra, ...)
+* tvoření aliasů "ms = Malostranské náměstí"
 
