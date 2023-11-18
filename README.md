@@ -15,9 +15,9 @@ Vítejte v IDOS CLI, nástroji pro pohodlné a rychlé vyhledávání spojů pom
 
     - např. vyhledaní spoje z Kuchyňky na Malostranské náměstí:
 
-        `python main.py Kuchyňka - Malostranské Náměstí` 
+          `python main.py Kuchyňka - Malostranské Náměstí`
 
-        (argument musí obsahovat pomlčku)
+  (argument musí obsahovat pomlčku)
 
 * Místo celého názvu zastávky, lze zadat i jeho zkrácená forma:
 
@@ -26,7 +26,6 @@ Vítejte v IDOS CLI, nástroji pro pohodlné a rychlé vyhledávání spojů pom
 * Já mám na main nastavený sim lin:   
 
         `ln -s ~/path/to/main/main.py idos`
-
         `idos kuch - malo nam`
 
 K dispozici je několik flagů:
