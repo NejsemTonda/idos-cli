@@ -15,15 +15,17 @@ Vítejte v IDOS CLI, nástroji pro pohodlné a rychlé vyhledávání spojů pom
 
     - např. vyhledaní spoje z Kuchyňky na Malostranské náměstí:
 
-        `python main.py Kuchyňka - Malostranské Náměstí` (argument musí obsahovat pomlčku)
+        `python main.py Kuchyňka - Malostranské Náměstí` 
+
+        (argument musí obsahovat pomlčku)
 
 * Místo celého názvu zastávky, lze zadat i jeho zkrácená forma:
 
-    `python main.py kuch - malo nam`
+        `python main.py kuch - malo nam`
 
 * Já mám na main nastavený sim lin:   
-    `ln -s ~/path/to/main/main.py idos`   
-    `idos kuch - malo nam`   
+        `ln -s ~/path/to/main/main.py idos`   
+        `idos kuch - malo nam`   
 
 K dispozici je několik flagů:
 *  `-d`, `--department` čas odjezdu (např. now, 16:37, 20min)
