@@ -24,8 +24,10 @@ Vítejte v IDOS CLI, nástroji pro pohodlné a rychlé vyhledávání spojů pom
         `python main.py kuch - malo nam`
 
 * Já mám na main nastavený sim lin:   
-        `ln -s ~/path/to/main/main.py idos`   
-        `idos kuch - malo nam`   
+
+        `ln -s ~/path/to/main/main.py idos`
+
+        `idos kuch - malo nam`
 
 K dispozici je několik flagů:
 *  `-d`, `--department` čas odjezdu (např. now, 16:37, 20min)
