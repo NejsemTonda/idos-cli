@@ -5,7 +5,15 @@ from connection import Connection, Transport
 ambi_error = "Zadání není jednoznačné, vyberte prosím z nabízeného seznamu."
 unknown_error = "Takové místo neznáme."
 
-def get_connections(f: str, t: str, means="vlakyautobusymhdvse", time = None, arr=False):
+means_id = {
+    "tram" : 300,
+    "bus" : 301,
+    "metro" : 302,
+    "vlak" : 315,
+    "all": "150,151,152,153,154,155,156,200,201,202,300,301,302,303,304,305,306,307,308,309,310,311,312,314,315,317,318,319"
+}
+
+def get_connections(f: str, t: str, means="all", time = None, arr=False):
     """
     This function send a request to IDOS and finds a connections for give stations
     Arguments:
@@ -20,13 +28,28 @@ def get_connections(f: str, t: str, means="vlakyautobusymhdvse", time = None, ar
     to_label = -1
 
     while(True):
-        url = f"https://idos.idnes.cz/{means}/spojeni/vysledky/?f={f}&fc={from_label}&t={t}&tc={to_label}"
+        url = f"https://idos.idnes.cz/vlakyautobusymhdvse/spojeni/vysledky/?f={f}&fc={from_label}&t={t}&tc={to_label}"
+
         if time is not None:
             url += f"&time={time}" 
 
         if arr:
             url += f"&arr=true" 
-            print(url)
+
+        if means != "all":
+            url += "&af=true"
+            tokens = means.split(",")
+            if tokens[0] == "only":
+                ids = list(map(str, [means_id[t] for t in tokens[1:]]))
+                trt = ",".join(ids)
+
+            if tokens[0] == "exclude":
+                trt = means_id["all"]
+                ids = [means_id[t] for t in tokens[1:]]
+                for i in ids:
+                    trt = trt.replace(","+str(i), "")
+                
+            url += "&trt="+trt
 
         r = requests.get(url)
         # requests.exceptions.ConnectionError:
@@ -34,7 +57,7 @@ def get_connections(f: str, t: str, means="vlakyautobusymhdvse", time = None, ar
         to_box = soup.find('label', {'for': 'To'})
         from_box = soup.find('label', {'for': 'From'})
 
-        if to_box is None or from_box == None:
+        if to_box is None or from_box is None:
             break
 
         try:

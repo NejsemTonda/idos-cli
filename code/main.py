@@ -14,10 +14,20 @@ def find(args):
     assert args.arrival is None or is_time(args.arrival), f"Time {args.arrival} was not in correct format"
 
     assert len(args.exclude) == 0 or len(args.only) == 0, "exclude and only cannot be set at the same time"
-    
+
+    for mean in args.exclude:
+        assert mean in ["bus", "tram", "metro", "vlak"], "exclude means can be only: bus, tram, metro, vlak"
+
+    for mean in args.only:
+        assert mean in ["bus", "tram", "metro", "vlak"], "\"only\" means can be only: bus, tram, metro, vlak"
+        
+    means = (len(args.exclude)>0)*"exclude,"+",".join(args.exclude) \
+        or  (len(args.only)>0)*"only,"+",".join(args.only) \
+        or "all"
+
     time = args.arrival or args.department
 
-    return get_connections(f, t, time=time, arr=args.arrival is not None)
+    return get_connections(f, t, time=time, arr=args.arrival is not None, means=means)
      
 
 if __name__ == "__main__":
