@@ -35,6 +35,16 @@ K dispozici je několik flagů:
 *  `-x`, `--exclude `   vyjma doprvaních prostředků (může být: bus, tram, metro, vlak)
 *  `-o`, `--only`       jenom tyto dopravní porstředky (může být: bus, tram, metro, vlak)
 
+Např:
+* Z dvorců na hlavní nádraží bez metra:
+
+        `python main.py dvorce - hl nad -x metro`
+  
+* Z Budějovické na Malostranské náměstí s příjezdem v 9:10 :
+
+          `python main.py bude - malo nam -a 9:10
+  
+
 ### TODO
 
 * Vyhledávání spoje
@@ -46,6 +56,6 @@ K dispozici je několik flagů:
 * čas (-t now, 20min, 16:37, ...)
     * -a and -d flagy pro konkrétní časy (hh:mm) ✅
 * přes
-* filtrování (jenom tramvaje, bez metra, ...)
+* filtrování (jenom tramvaje, bez metra, ...)✅
 * tvoření aliasů "ms = Malostranské náměstí"
 
