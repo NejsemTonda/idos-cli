@@ -57,7 +57,7 @@ def get_connections(f: str, t: str, means="all", time=None, arr=False):
 			r = requests.get(url)
 		except requests.exceptions.ConnectionError:
 			print("Couldn't find any connection, no interet")
-			quit()
+			quit(1)
 		
 		soup = BeautifulSoup(r.text, "html.parser")
 		to_box = soup.find('label', {'for': 'To'})
@@ -73,7 +73,8 @@ def get_connections(f: str, t: str, means="all", time=None, arr=False):
 			if ambi_error in to_box.text or unknown_error in to_box.text:
 				to_label = possible_labels[possible_labels.index(to_label)+1]
 		except IndexError:
-			raise ValueError(f"Zadání {f} -- > {t} bylo nejednoznačné")
+			print((f"Zadání {f} -- > {t} bylo nejednoznačné"))
+			quit(1)
 
 	print(url)
 	connection_boxes = soup.find_all(lambda tag: tag.has_attr('id') and tag['id'].startswith('connectionBox'))
