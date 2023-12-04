@@ -19,7 +19,9 @@ def get_connections(f: str, t: str, means="all", time=None, arr=False):
 	Arguments:
 		f: str --> from station
 		t: str --> to station
-		means: str --> IDOS flag to determinate wich means of transport can we use
+		means: str --> string of all ids of means of transport, that can idos use (see more in means_id ^^^)  
+		time: str --> if arrival flag is set to false, idos will search only connections departing from this time. If set to true, search for arrivals insted
+		arr: bool --> arrival flag
 	Returns:
 		list of Connections classes
 	"""
@@ -51,8 +53,12 @@ def get_connections(f: str, t: str, means="all", time=None, arr=False):
 				
 			url += "&trt="+trt
 
-		r = requests.get(url)
-		# requests.exceptions.ConnectionError:
+		try:
+			r = requests.get(url)
+		except requests.exceptions.ConnectionError:
+			print("Couldn't find any connection, no interet")
+			quit()
+		
 		soup = BeautifulSoup(r.text, "html.parser")
 		to_box = soup.find('label', {'for': 'To'})
 		from_box = soup.find('label', {'for': 'From'})
