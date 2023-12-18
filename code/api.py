@@ -56,7 +56,7 @@ def get_connections(f: str, t: str, means="all", time=None, arr=False):
 		try:
 			r = requests.get(url)
 		except requests.exceptions.ConnectionError:
-			print("Couldn't find any connection, no interet")
+			print("Nebylo možné najít spoje, zařízení není přípojeno k internetu")
 			quit(1)
 		
 		soup = BeautifulSoup(r.text, "html.parser")
@@ -73,7 +73,7 @@ def get_connections(f: str, t: str, means="all", time=None, arr=False):
 			if ambi_error in to_box.text or unknown_error in to_box.text:
 				to_label = possible_labels[possible_labels.index(to_label)+1]
 		except IndexError:
-			print((f"Zadání {f} -- > {t} bylo nejednoznačné"))
+			print((f"Zadání {f} -- > {t} nebylo jednoznačné, nebo nebylo možné najít zadané místo"))
 			quit(1)
 
 	print(url)
