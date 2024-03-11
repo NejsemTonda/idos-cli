@@ -58,4 +58,4 @@ Např:
 * přes
 * filtrování (jenom tramvaje, bez metra, ...)✅
 * tvoření aliasů "ms = Malostranské náměstí"
-
+* fix bug "idos arbes - narodni div"
