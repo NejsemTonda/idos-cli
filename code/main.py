@@ -27,7 +27,7 @@ def find(args):
 
     time = args.arrival or args.department
 
-    return get_connections(f, t, time=time, arr=args.arrival is not None, means=means)
+    return get_connections(f, t, con_time=time, arr=args.arrival is not None, means=means)
      
 
 if __name__ == "__main__":
@@ -37,6 +37,7 @@ if __name__ == "__main__":
     parser.add_argument("-a", "--arrival", help="time of arrival (e.g. now, 16:37, 20min)")
     parser.add_argument("-v", "--via", nargs="*", default=[], help="via staions")
     parser.add_argument("-x", "--exclude", nargs="*", default=[], help="exclude means of transport (can be: bus, tram, metro, vlak)")
+    parser.add_argument("-s", "--selenium", action="store_true", help="use selenium instead of requests (slower, but can load javascripts") 
     parser.add_argument("-o", "--only", nargs="*", default=[], help="use only these means of transport (can be: bus, tram, metro, vlak)")
     args = parser.parse_args()
 

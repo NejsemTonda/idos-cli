@@ -1,6 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
 from connection import Connection, Transport
+import time
+
+
  
 ambi_error = "Zadání není jednoznačné, vyberte prosím z nabízeného seznamu."
 unknown_error = "Takové místo neznáme."
@@ -13,14 +16,14 @@ means_id = {
     "all": "150,151,152,153,154,155,156,200,201,202,300,301,302,303,304,305,306,307,308,309,310,311,312,314,315,317,318,319"
 }
 
-def get_connections(f: str, t: str, means="all", time=None, arr=False):
+def get_connections(f: str, t: str, means="all", con_time=None, arr=False, use_selenium=False):
     """
     This function send a request to IDOS and finds a connections for give stations
     Arguments:
         f: str --> from station
         t: str --> to station
         means: str --> string of all ids of means of transport, that can idos use (see more in means_id ^^^)  
-        time: str --> if arrival flag is set to false, idos will search only connections departing from this time. If set to true, search for arrivals insted
+        con_time: str --> if arrival flag is set to false, idos will search only connections departing from this time. If set to true, search for arrivals insted
         arr: bool --> arrival flag
     Returns:
         list of Connections classes
@@ -29,11 +32,18 @@ def get_connections(f: str, t: str, means="all", time=None, arr=False):
     from_label = -1
     to_label = -1
 
+    if use_selenium: 
+        from selenium import webdriver
+        from selenium.webdriver.chrome.options import Options
+        chrome_options = Options()
+        chrome_options.add_argument("--headless=new")
+        driver = webdriver.Chrome(options=chrome_options)
+
     while(True):
         url = f"https://idos.idnes.cz/vlakyautobusymhdvse/spojeni/vysledky/?f={f}&fc={from_label}&t={t}&tc={to_label}"
 
-        if time is not None:
-            url += f"&time={time}" 
+        if con_time is not None:
+            url += f"&time={con_time}" 
 
         if arr:
             url += f"&arr=true" 
@@ -54,12 +64,16 @@ def get_connections(f: str, t: str, means="all", time=None, arr=False):
             url += "&trt="+trt
 
         try:
-            r = requests.get(url)
+            if use_selenium:
+                driver.get(url)
+                r = driver.page_source
+            else:
+                r = requests.get(url).text
         except requests.exceptions.ConnectionError:
             print("Nebylo možné najít spoje, zařízení není přípojeno k internetu")
             quit(1)
         
-        soup = BeautifulSoup(r.text, "html.parser")
+        soup = BeautifulSoup(r, "html.parser")
         to_box = soup.find('label', {'for': 'To'})
         from_box = soup.find('label', {'for': 'From'})
 
@@ -88,6 +102,7 @@ def get_connections(f: str, t: str, means="all", time=None, arr=False):
         transports  = []
         for x in [x for x in box.find_all('ul')][:len(names)]:
             data = []
+
             for y in x.find_all('li'):
                 # times and stations are p elements (time, station)
                 data.append([x.text for x in y.find_all('p')])
@@ -96,6 +111,8 @@ def get_connections(f: str, t: str, means="all", time=None, arr=False):
     
             # flatten data
             data = [j for sub in data for j in sub]
+            if len(data) == 0:
+                data = ["??:??", "JavaScript: Please use selenium", "??:??", "JavaScript: Please use selenium"]
             t = Transport(names.pop(0), *data)
         
             transports.append(t)
