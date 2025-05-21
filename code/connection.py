@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class Transport:
     name: str
@@ -7,9 +8,9 @@ class Transport:
     f: str
     finish: str
     t: str
-    
+
     def __repr__(self):
-        return f"{self.name}\n  {self.when} {self.f} \n  {self.finish} {self.t}" 
+        return f"{self.name}\n  {self.when} {self.f} \n  {self.finish} {self.t}"
 
 
 class Connection:
@@ -26,13 +27,13 @@ class Connection:
             for line in repr(t).split("\n"):
                 ts.append(line)
 
-        l = len(max(ts, key=lambda x: len(x)))+1
+        l = len(max(ts, key=lambda x: len(x))) + 1
         times = f"{self.start} --> {self.finish}"
-        l = max(l, len(times)+3)
- 
-        ret = f"|-- {times} " + "-"*(l - len(times) - len(self.total)-4) +  f"{self.total}" + "-|\n"
-        ts =[f"| {t}" + " "*(l-len(t)) + "|" for t in ts]
+        l = max(l, len(times) + 3)
+
+        ret = f"┌── {times} " + "─" * (l - len(times) - len(self.total) - 4) + f"{self.total}" + "─┐\n"
+        ts = [f"│ {t}" + " " * (l - len(t)) + "│" for t in ts]
         ret += "\n".join(ts)
-        ret += "\n|-" + "-"*l+"|"
+        ret += "\n└─" + "─" * l + "┘"
 
         return ret
