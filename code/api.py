@@ -25,70 +25,60 @@ def get_connections(f: str, t: str, means="all", con_time=None, arr=False):
     from_label = -1
     to_label = -1
 
-    while True:
-        url = f"https://idos.idnes.cz/vlakyautobusymhdvse/spojeni/vysledky/?f={f}&fc={from_label}&t={t}&tc={to_label}"
+    from playwright.sync_api import sync_playwright
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
 
-        if con_time is not None:
-            url += f"&time={con_time}"
+        while True:
+            url = f"https://idos.idnes.cz/vlakyautobusymhdvse/spojeni/vysledky/?f={f}&fc={from_label}&t={t}&tc={to_label}"
 
-        if arr:
-            url += f"&arr=true"
+            if con_time is not None:
+                url += f"&time={con_time}"
 
-        if means != "all":
-            url += "&af=true"
-            tokens = means.split(",")
-            if tokens[0] == "only":
-                ids = list(map(str, [means_id[t] for t in tokens[1:]]))
-                trt = ",".join(ids)
+            if arr:
+                url += f"&arr=true"
 
-            if tokens[0] == "exclude":
-                trt = means_id["all"]
-                ids = [means_id[t] for t in tokens[1:]]
-                for i in ids:
-                    trt = trt.replace("," + str(i), "")
+            if means != "all":
+                url += "&af=true"
+                tokens = means.split(",")
+                if tokens[0] == "only":
+                    ids = list(map(str, [means_id[t] for t in tokens[1:]]))
+                    trt = ",".join(ids)
 
-            url += "&trt=" + trt
+                if tokens[0] == "exclude":
+                    trt = means_id["all"]
+                    ids = [means_id[t] for t in tokens[1:]]
+                    for i in ids:
+                        trt = trt.replace("," + str(i), "")
 
-        try:
-            from playwright.sync_api import sync_playwright
-            with sync_playwright() as p:
-                browser = p.chromium.launch(headless=True)
-                page = browser.new_page()
-                page.goto(url)
-                page.wait_for_load_state("networkidle")
-                # wait until at least one connection box is present
-                try:
-                    page.wait_for_selector("[id^='connectionBox']", timeout=5000)
-                except Exception:
-                    pass
-                r = page.content()
-                browser.close()
-        except ImportError:
+                url += "&trt=" + trt
+
+            page.goto(url)
             try:
-                r = requests.get(url).text
-            except requests.exceptions.ConnectionError:
-                print("Nebylo možné najít spoje, zařízení není přípojeno k internetu")
+                page.wait_for_selector("[id^='connectionBox']", timeout=8000)
+            except Exception:
+                pass
+            r = page.content()
+
+            soup = BeautifulSoup(r, "html.parser")
+            to_box = soup.find("label", {"for": "To"})
+            from_box = soup.find("label", {"for": "From"})
+
+            if to_box is None or from_box is None:
+                break
+
+            try:
+                if ambi_error in from_box.text or unknown_error in from_box.text:
+                    from_label = possible_labels[possible_labels.index(from_label) + 1]
+
+                if ambi_error in to_box.text or unknown_error in to_box.text:
+                    to_label = possible_labels[possible_labels.index(to_label) + 1]
+            except IndexError:
+                print((f"Zadání {f} -- > {t} nebylo jednoznačné, nebo nebylo možné najít zadané místo"))
                 quit(1)
-        except Exception:
-            print("Nebylo možné najít spoje, zařízení není přípojeno k internetu")
-            quit(1)
 
-        soup = BeautifulSoup(r, "html.parser")
-        to_box = soup.find("label", {"for": "To"})
-        from_box = soup.find("label", {"for": "From"})
-
-        if to_box is None or from_box is None:
-            break
-
-        try:
-            if ambi_error in from_box.text or unknown_error in from_box.text:
-                from_label = possible_labels[possible_labels.index(from_label) + 1]
-
-            if ambi_error in to_box.text or unknown_error in to_box.text:
-                to_label = possible_labels[possible_labels.index(to_label) + 1]
-        except IndexError:
-            print((f"Zadání {f} -- > {t} nebylo jednoznačné, nebo nebylo možné najít zadané místo"))
-            quit(1)
+        browser.close()
 
     print(url)
     connection_boxes = soup.find_all(lambda tag: tag.has_attr("id") and tag["id"].startswith("connectionBox"))
