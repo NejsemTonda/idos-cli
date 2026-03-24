@@ -1,7 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
 from connection import Connection, Transport
-import time
 
 
 ambi_error = "Zadání není jednoznačné, vyberte prosím z nabízeného seznamu."
@@ -10,7 +9,7 @@ unknown_error = "Takové místo neznáme."
 means_id = {"tram": 300, "bus": 301, "metro": 302, "vlak": 315, "all": "150,151,152,153,154,155,156,200,201,202,300,301,302,303,304,305,306,307,308,309,310,311,312,314,315,317,318,319"}
 
 
-def get_connections(f: str, t: str, means="all", con_time=None, arr=False, use_selenium=False):
+def get_connections(f: str, t: str, means="all", con_time=None, arr=False):
     """
     This function send a request to IDOS and finds a connections for give stations
     Arguments:
@@ -25,14 +24,6 @@ def get_connections(f: str, t: str, means="all", con_time=None, arr=False, use_s
     possible_labels = [-1, 1, 2, 301003]
     from_label = -1
     to_label = -1
-
-    if use_selenium:
-        from selenium import webdriver
-        from selenium.webdriver.chrome.options import Options
-
-        chrome_options = Options()
-        chrome_options.add_argument("--headless=new")
-        driver = webdriver.Chrome(options=chrome_options)
 
     while True:
         url = f"https://idos.idnes.cz/vlakyautobusymhdvse/spojeni/vysledky/?f={f}&fc={from_label}&t={t}&tc={to_label}"
@@ -59,12 +50,26 @@ def get_connections(f: str, t: str, means="all", con_time=None, arr=False, use_s
             url += "&trt=" + trt
 
         try:
-            if use_selenium:
-                driver.get(url)
-                r = driver.page_source
-            else:
+            from playwright.sync_api import sync_playwright
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                page = browser.new_page()
+                page.goto(url)
+                page.wait_for_load_state("networkidle")
+                # wait until at least one connection box is present
+                try:
+                    page.wait_for_selector("[id^='connectionBox']", timeout=5000)
+                except Exception:
+                    pass
+                r = page.content()
+                browser.close()
+        except ImportError:
+            try:
                 r = requests.get(url).text
-        except requests.exceptions.ConnectionError:
+            except requests.exceptions.ConnectionError:
+                print("Nebylo možné najít spoje, zařízení není přípojeno k internetu")
+                quit(1)
+        except Exception:
             print("Nebylo možné najít spoje, zařízení není přípojeno k internetu")
             quit(1)
 
@@ -95,7 +100,7 @@ def get_connections(f: str, t: str, means="all", con_time=None, arr=False, use_s
         total_time = box.find("p", class_="reset total").text.split(",")[0].replace("Celkový čas", "").strip()
 
         transports = []
-        for x in [x for x in box.find_all("ul")][: len(names)]:
+        for x in [x for x in box.find_all("ul") if "stations" in x.get("class", [])][:len(names)]:
             data = []
 
             for y in x.find_all("li"):
@@ -106,8 +111,6 @@ def get_connections(f: str, t: str, means="all", con_time=None, arr=False, use_s
 
             # flatten data
             data = [j for sub in data for j in sub]
-            if len(data) == 0:
-                data = ["??:??", "JavaScript: Please use selenium", "??:??", "JavaScript: Please use selenium"]
             t = Transport(names.pop(0), *data)
 
             transports.append(t)
