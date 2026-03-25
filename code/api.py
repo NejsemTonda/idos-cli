@@ -34,7 +34,14 @@ def _needs_js(soup):
     return False
 
 
-def get_connections(f: str, t: str, means="all", con_time=None, arr=False):
+def _start_browser():
+    from playwright.sync_api import sync_playwright
+    pw = sync_playwright().start()
+    browser = pw.chromium.launch(headless=True)
+    return pw, browser, browser.new_page()
+
+
+def get_connections(f: str, t: str, means="all", con_time=None, arr=False, count=3):
     """
     This function send a request to IDOS and finds a connections for give stations
     Arguments:
@@ -43,13 +50,14 @@ def get_connections(f: str, t: str, means="all", con_time=None, arr=False):
         means: str --> string of all ids of means of transport, that can idos use (see more in means_id ^^^)
         con_time: str --> if arrival flag is set to false, idos will search only connections departing from this time. If set to true, search for arrivals insted
         arr: bool --> arrival flag
+        count: int --> number of connections to return
     Returns:
         list of Connections classes
     """
     possible_labels = [-1, 1, 2, 301003]
     from_label = -1
     to_label = -1
-    page = None
+    pw, browser, page = None, None, None
 
     while True:
         url = f"https://idos.idnes.cz/vlakyautobusymhdvse/spojeni/vysledky/?f={f}&fc={from_label}&t={t}&tc={to_label}"
@@ -79,10 +87,7 @@ def get_connections(f: str, t: str, means="all", con_time=None, arr=False):
         soup = BeautifulSoup(r, "html.parser")
 
         if _needs_js(soup) and page is None:
-            from playwright.sync_api import sync_playwright
-            _pw = sync_playwright().start()
-            _browser = _pw.chromium.launch(headless=True)
-            page = _browser.new_page()
+            pw, browser, page = _start_browser()
             r = _fetch(url, page)
             soup = BeautifulSoup(r, "html.parser")
 
@@ -102,15 +107,37 @@ def get_connections(f: str, t: str, means="all", con_time=None, arr=False):
             print((f"Zadání {f} -- > {t} nebylo jednoznačné, nebo nebylo možné najít zadané místo"))
             quit(1)
 
-    if page is not None:
-        _browser.close()
-        _pw.stop()
+    # load more connections by clicking pagingNext if needed
+    boxes = soup.find_all(lambda tag: tag.has_attr("id") and tag["id"].startswith("connectionBox"))
+    while len(boxes) < count:
+        if page is None:
+            pw, browser, page = _start_browser()
+            r = _fetch(url, page)
+            soup = BeautifulSoup(r, "html.parser")
+            boxes = soup.find_all(lambda tag: tag.has_attr("id") and tag["id"].startswith("connectionBox"))
+
+        next_btn = page.query_selector(".pagingNext")
+        if not next_btn:
+            break
+        current_count = len(boxes)
+        next_btn.click()
+        try:
+            page.wait_for_function(
+                f"document.querySelectorAll('[id^=\"connectionBox\"]').length > {current_count}",
+                timeout=5000
+            )
+        except Exception:
+            break
+        soup = BeautifulSoup(page.content(), "html.parser")
+        boxes = soup.find_all(lambda tag: tag.has_attr("id") and tag["id"].startswith("connectionBox"))
+
+    if browser is not None:
+        browser.close()
+        pw.stop()
 
     print(url)
-    connection_boxes = soup.find_all(lambda tag: tag.has_attr("id") and tag["id"].startswith("connectionBox"))
-
     connections = []
-    for box in connection_boxes:
+    for box in boxes[:count]:
         # get names of the connections (bus 123, Os 1234, Metro A,...)
         names = [x.text for x in box.find_all("h3")]
         total_time = box.find("p", class_="reset total").text.split(",")[0].replace("Celkový čas", "").strip()
